@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="application/msword; charset=utf-8"/>
+    <title>toWord</title>
+    <style type="text/css">
+        .bg {
+            font-size: 14.5px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #666;
+        }
+
+        table {
+            border-width: 1px;
+            border-style: solid;
+            border-color: black;
+            table-layout: fixed;
+        }
+
+        tr {
+            height: 32px;
+            font-size: 12px;
+        }
+
+        td {
+            padding-left: 10px;
+            border-width: 1px;
+            border-style: solid;
+            border-color: black;
+            height: 32px;
+            overflow: hidden;
+            word-break: break-all;
+            word-wrap: break-word;
+            font-size: 14.5px;
+        }
+
+        .bg td {
+            font-size: 14.5px;
+        }
+
+        tr td {
+            font-size: 14.5px;
+        }
+
+        .specialHeight {
+            height: 40px;
+        }
+
+        .first_title {
+            height: 60px;
+            line-height: 60px;
+            margin: 0;
+            font-weight: bold;
+            font-size: 21px;
+        }
+
+        .second_title {
+            height: 40px;
+            line-height: 40px;
+            margin: 0;
+            font-size: 18.5px;
+        }
+
+        .doc_title {
+            font-size: 42.5px;
+            text-align: center;
+        }
+
+        .download_btn {
+            float: right;
+        }
+
+        body {
+            font-family: Arial;
+        }
+    </style>
+</head>
+
+<body>
+<div style="width:800px; margin: 0 auto">
+    <div>
+        <p class="doc_title" th:text="${info.title +'（'+ info.version +'）'}"></p>
+        <a class="download_btn" th:if="${download == 1}" th:href="${'/downloadWord?url='+ url}">문서다운로드</a>
+        <br>
+    </div>
+    <div th:each="tableMap:${tableMap}" style="margin-bottom:20px;">
+
+        <h4 class="first_title" th:text="${tableMap.key}"></h4>
+        <div th:each="table,tableStat:${tableMap.value}">
+
+            <h5 class="second_title" th:text="${tableStat.count} + '）' + ${table.tag}"></h5>
+
+            <table border="1" cellspacing="0" cellpadding="0" width="100%">
+                <tr class="bg">
+                    <td colspan="5" th:text="${table.tag}"></td>
+                </tr>
+                <tr>
+                    <td width="25%">인터페이스 설명</td>
+                    <td colspan="4" th:text="${table.description}"></td>
+                </tr>
+                <tr>
+                    <td>URL</td>
+                    <td colspan="4" th:text="${table.url}"></td>
+                </tr>
+                <tr>
+                    <td>매소드</td>
+                    <td colspan="4" th:text="${#strings.toUpperCase(table.requestType)}"></td>
+                </tr>
+                <tr>
+                    <td>요청</td>
+                    <td colspan="4" th:text="${table.requestForm}"></td>
+                </tr>
+                <tr>
+                    <td>타입</td>
+                    <td colspan="4" th:text="${table.responseForm}"></td>
+                </tr>
+
+                <tr class="bg">
+                    <td>매개변수</td>
+                    <td width="15%">데이터유형</td>
+                    <td width="15%">변수유형</td>
+                    <td width="15%">필수여부</td>
+                    <td width="29%">지침</td>
+                </tr>
+
+                <th:block th:each="request, c:${table.requestList}">
+                    <tr>
+                        <td align="left" th:text="${c.count} + '.' + ${request.name}"></td>
+                        <td th:text="${request.type}"></td>
+                        <td th:text="${request.paramType}"></td>
+                        <td th:if="${request.require}" th:text="Y"></td>
+                        <td th:if="${!request.require}" th:text="N"></td>
+                        <td th:text="${request.remark}"></td>
+                        <!--                        <td th:if="${request.modelAttr}" th:text="asdfagadfg"></td>-->
+                    </tr>
+                    <th:block th:if="${request.modelAttr}">
+                        <tbody th:include="this::request(${request.modelAttr.properties},${c.count} + '.', 1)"/>
+                    </th:block>
+
+
+                </th:block>
+
+                <tr class="bg">
+                    <td>상태코드</td>
+                    <td colspan="2">설명</td>
+                    <td colspan="2">기타</td>
+                </tr>
+
+                <tr th:each="response:${table.responseList}">
+                    <td th:text="${response.name}"></td>
+                    <td colspan="2" th:text="${response.description}"></td>
+                    <td colspan="2" th:text="${response.remark}"></td>
+                </tr>
+
+                <tr class="bg">
+                    <td>반환속성이름</td>
+                    <td colspan="2">유형</td>
+                    <td colspan="2">설명</td>
+                </tr>
+
+                <tbody th:include="this::response(${table.modelAttr.properties},'', 1)"/>
+
+                <tr class="bg">
+                    <td colspan="5"></td>
+                </tr>
+                <tr class="specialHeight">
+                    <td class="bg">요청 매개 변수</td>
+                    <td colspan="4" th:text="${table.requestParam}"></td>
+                </tr>
+                <tr class="specialHeight">
+                    <td class="bg">반환 값</td>
+                    <td colspan="4" th:text="${table.responseParam}"></td>
+                </tr>
+
+            </table>
+        </div>
+    </div>
+</div>
+
+<th:block th:fragment="request(properties,count, lv)">
+    <th:block th:each="p,c : ${properties}">
+        <tr>
+            <td align="left" th:text="${count} + '' + ${c.count} + '.' + ${p.name}"
+                th:style="|padding-left:${10*lv}px|"></td>
+            <td th:text="${p.type}"></td>
+            <td></td>
+            <td th:if="${p.require}" th:text="Y"></td>
+            <td th:if="${!p.require}" th:text="N"></td>
+            <td th:text="${p.description}"></td>
+        </tr>
+        <th:block th:unless="${#lists.isEmpty(p.properties)}"
+                  th:include="this::request(${p.properties},${count} + '' + ${c.count} + '.',${lv+1})"/>
+    </th:block>
+</th:block>
+
+<th:block th:fragment="response(properties,count, lv)">
+    <th:block th:each="p,c : ${properties}">
+        <tr>
+            <td align="left" th:text="${count} + '' + ${c.count} + '.' + ${p.name}"
+                th:style="|padding-left:${10*lv}px|"></td>
+            <td colspan="2" th:text="${p.type}"></td>
+            <td colspan="2" th:text="${p.description}"></td>
+        </tr>
+        <th:block th:unless="${#lists.isEmpty(p.properties)}"
+                  th:include="this::response(${p.properties},${count} + '' + ${c.count} + '.',${lv+1})"/>
+    </th:block>
+</th:block>
+</body>
+</html>
